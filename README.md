@@ -21,11 +21,6 @@ The following business requirements have been implemented:
 - Users must be able to create write or read access for payments and savings accounts
 - Users need to be able to retrieve a list of accounts they have read or write access for
 
-Boundaries
-
-- You can add dependencies as you like
-- You can design the data and API models as you like (what a dream, isn't it?)
-
 Notes
 
 - The code is ready to go to production on delivery
