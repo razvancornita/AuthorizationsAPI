@@ -1,8 +1,8 @@
-package nl.rabobank.authorizations;
+package com.authorization.authorizations;
 
+import com.authorization.account.Account;
 import lombok.Builder;
 import lombok.Value;
-import nl.rabobank.account.Account;
 
 @Value
 @Builder(toBuilder = true)

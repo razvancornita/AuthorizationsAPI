@@ -1,4 +1,4 @@
-package nl.rabobank.authorizations;
+package com.authorization.authorizations;
 
 public enum Authorization {
     READ,

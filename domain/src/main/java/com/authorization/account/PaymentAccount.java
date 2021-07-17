@@ -1,4 +1,4 @@
-package nl.rabobank.account;
+package com.authorization.account;
 
 import lombok.Value;
 

@@ -1,4 +1,4 @@
-package nl.rabobank.mongo;
+package com.authorization.mongo;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
