@@ -4,8 +4,10 @@ package com.authorization.service;
 import com.authorization.account.Account;
 import com.authorization.exception.UnauthorizedException;
 import com.authorization.mongo.entity.AccountEntity;
+import com.authorization.mongo.entity.LoginEntity;
 import com.authorization.mongo.entity.UserEntity;
 import com.authorization.repository.AccountRepository;
+import com.authorization.repository.LoginRepository;
 import com.authorization.repository.UserRepository;
 import com.authorization.user.User;
 import org.springframework.stereotype.Service;
@@ -20,10 +22,12 @@ public class DatabaseService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final LoginRepository loginRepository;
 
-    public DatabaseService(AccountRepository accountRepository, UserRepository userRepository) {
+    public DatabaseService(AccountRepository accountRepository, UserRepository userRepository, LoginRepository loginRepository) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
+        this.loginRepository = loginRepository;
     }
 
     public Optional<UserEntity> getUserByUsername(String username) {
@@ -67,5 +71,18 @@ public class DatabaseService {
 
     public List<AccountEntity> getAllAccounts() {
         return accountRepository.findAll();
+    }
+
+    public void saveLogin(String username) {
+        Optional<LoginEntity> previousLogin = loginRepository.findByName(username);
+        LoginEntity loginEntity;
+        if (previousLogin.isEmpty()) {
+            loginEntity = new LoginEntity(username, true);
+        } else {
+            loginEntity = previousLogin.get();
+            loginEntity.setLoggedIn(true);
+        }
+        loginRepository.save(loginEntity);
+
     }
 }

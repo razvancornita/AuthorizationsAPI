@@ -1,6 +1,7 @@
 package com.authorization.controller;
 
 import com.authorization.security.JwtTokenProvider;
+import com.authorization.service.DatabaseService;
 import com.authorization.user.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +20,13 @@ public class SecurityController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+    private final DatabaseService databaseService;
 
 
-    public SecurityController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
+    public SecurityController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, DatabaseService databaseService) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
+        this.databaseService = databaseService;
     }
 
 
@@ -32,6 +35,7 @@ public class SecurityController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUserName(), user.getPin()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        databaseService.saveLogin(user.getUserName());
         return ResponseEntity.ok("{ \"Bearer\" : \"" + tokenProvider.generateToken(authentication) + "\"}");
     }
 
