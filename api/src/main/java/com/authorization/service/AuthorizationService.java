@@ -5,20 +5,18 @@ import com.authorization.account.Account;
 import com.authorization.authorizations.Authorization;
 import com.authorization.authorizations.PowerOfAttorney;
 import com.authorization.mongo.entity.AccountEntity;
-import com.authorization.mongo.entity.GranteeAccount;
+import com.authorization.mongo.entity.GranteeUser;
 import com.authorization.mongo.entity.UserEntity;
 import com.authorization.security.SecurityUtility;
 import com.authorization.user.User;
 import com.authorization.util.ValidatorUtil;
-import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthorizationService {
@@ -33,60 +31,64 @@ public class AuthorizationService {
 
     public List<AccountEntity> getAllAccounts() {
         String username = securityUtility.getUserName();
-        UserEntity userEntity = databaseService.getUserByUsername(username).orElseThrow(() ->
-                new NoSuchElementException("logged in user doesn't have any accounts"));
-        List<GranteeAccount> granteeAccountIds = userEntity.getGranteeAccountIds();
 
-        if (granteeAccountIds == null) {
-            return Collections.emptyList();
+        List<AccountEntity> result = new ArrayList<>();
+        List<AccountEntity> accounts = databaseService.getAllAccounts();
+        for (AccountEntity account : accounts) {
+            account.getGranteeUsers().stream()
+                    .filter(granteeUser -> granteeUser.getGranteeName().equals(username))
+                    .findAny()
+                    .ifPresent(foundAccount -> result.add(account));
+            account.setGranteeUsers(Collections.emptyList());
         }
-        return getAllGranteeAccounts(granteeAccountIds);
+        return result;
     }
 
     public Optional<User> addPowerOfAttorney(PowerOfAttorney powerOfAttorney) {
         Account accountFromRequest = powerOfAttorney.getAccount();
         ValidatorUtil.validateAccountOwner(powerOfAttorney, accountFromRequest);
 
-        AccountEntity accountEntity = databaseService.getAccountByAccountNumber(accountFromRequest.getAccountNumber());
+        AccountEntity accountEntity = databaseService.getAccountByAccountNumber(accountFromRequest);
+
         Optional<UserEntity> granteeUser = databaseService.getUserByUsername(powerOfAttorney.getGranteeName());
 
-        if (granteeUser.isEmpty()) { //grantee does not have an account -> we create one
-            return Optional.of(createAndInsertUser(powerOfAttorney, accountEntity));
+        if (accountEntity.getGranteeUsers() == null) { //0 granteeUsers
+            List<GranteeUser> granteeUsers = Collections.singletonList(createGranteeAccount(powerOfAttorney));
+            accountEntity.setGranteeUsers(granteeUsers);
         } else {
-            UserEntity user = granteeUser.get();
-            List<GranteeAccount> granteeAccounts = user.getGranteeAccountIds();
-            Optional<GranteeAccount> existingAccount = granteeAccounts.stream().filter(granteeAccount ->
-                    accountEntity.getId().equals(granteeAccount.getAccountId())).findFirst();
+            Optional<GranteeUser> account = accountEntity.getGranteeUsers().stream()
+                    .filter(granteeAccount -> granteeAccount.getGranteeName().equals(powerOfAttorney.getGranteeName()))
+                    .findFirst();
 
-            if (existingAccount.isPresent()) {
-                GranteeAccount granteeAccount = existingAccount.get();
-                addRightToExistingGrantee(powerOfAttorney.getAuthorization(), granteeAccount);
-                databaseService.saveUser(user);
+            if (account.isPresent()) {
+                addRightToExistingGrantee(powerOfAttorney.getAuthorization(), account.get());
             } else {
-                GranteeAccount granteeAccount = createGranteeAccount(powerOfAttorney, accountEntity);
-                granteeAccounts.add(granteeAccount);
+                accountEntity.getGranteeUsers().add(createGranteeAccount(powerOfAttorney));
             }
-            return Optional.empty();
         }
+        databaseService.saveAccount(accountEntity);
+
+        if (granteeUser.isEmpty()) { //grantee does not have an account -> we create one
+            return Optional.of(createAndInsertUser(powerOfAttorney));
+        }
+        return Optional.empty();
     }
 
-    private void addRightToExistingGrantee(Authorization authorization, GranteeAccount granteeAccount) {
+    private void addRightToExistingGrantee(Authorization authorization, GranteeUser granteeUser) {
         if (authorization == Authorization.READ) {
-            granteeAccount.setCanRead(true);
+            granteeUser.setCanRead(true);
         } else if (authorization == Authorization.WRITE) {
-            granteeAccount.setCanWrite(true);
+            granteeUser.setCanWrite(true);
         }
     }
 
 
-    private User createAndInsertUser(PowerOfAttorney powerOfAttorney, AccountEntity accountEntity) {
-        GranteeAccount granteeAccount = createGranteeAccount(powerOfAttorney, accountEntity);
+    private User createAndInsertUser(PowerOfAttorney powerOfAttorney) {
         String randomPin = String.format("%04d", new Random().nextInt(10000));
 
         UserEntity userEntity = UserEntity.builder()
                 .name(powerOfAttorney.getGranteeName())
                 .pin(randomPin)
-                .granteeAccountIds(Collections.singletonList(granteeAccount))
                 .build();
 
         databaseService.saveUser(userEntity);
@@ -94,16 +96,11 @@ public class AuthorizationService {
     }
 
 
-    private GranteeAccount createGranteeAccount(PowerOfAttorney powerOfAttorney, AccountEntity accountEntity) {
-        GranteeAccount granteeAccount = new GranteeAccount();
-        granteeAccount.setAccountId(accountEntity.getId());
-        addRightToExistingGrantee(powerOfAttorney.getAuthorization(), granteeAccount);
-        return granteeAccount;
-    }
-
-    private List<AccountEntity> getAllGranteeAccounts(List<GranteeAccount> granteeAccountIds) {
-        List<String> accountIds = granteeAccountIds.stream().map(GranteeAccount::getAccountId).collect(Collectors.toList());
-        return Streamable.of(databaseService.getAllAccountsById(accountIds)).stream().collect(Collectors.toList());
+    private GranteeUser createGranteeAccount(PowerOfAttorney powerOfAttorney) {
+        GranteeUser granteeUser = new GranteeUser();
+        granteeUser.setGranteeName(powerOfAttorney.getGranteeName());
+        addRightToExistingGrantee(powerOfAttorney.getAuthorization(), granteeUser);
+        return granteeUser;
     }
 
     public AccountEntity insertAccount(Account account) {
