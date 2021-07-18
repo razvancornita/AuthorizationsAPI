@@ -2,6 +2,7 @@ package com.authorization.service;
 
 
 import com.authorization.account.Account;
+import com.authorization.exception.UnauthorizedException;
 import com.authorization.mongo.entity.AccountEntity;
 import com.authorization.mongo.entity.UserEntity;
 import com.authorization.repository.AccountRepository;
@@ -29,8 +30,14 @@ public class DatabaseService {
         return userRepository.findByName(username);
     }
 
-    public AccountEntity getAccountByAccountNumber(String accountNumber) {
-        return accountRepository.findByAccountNumber(accountNumber).orElseThrow(() -> new NoSuchElementException("account not found"));
+    public AccountEntity getAccountByAccountNumber(Account account) {
+        AccountEntity accountEntity = accountRepository.findByAccountNumber(account.getAccountNumber()).orElseThrow(() ->
+                new NoSuchElementException("account not found"));
+
+        if (!accountEntity.getAccountHolderName().equals(account.getAccountHolderName())) {
+            throw new UnauthorizedException("AccountHolder and AccountNumber do not match");
+        }
+        return accountEntity;
     }
 
     public UserEntity saveUser(UserEntity userEntity) {
@@ -56,5 +63,9 @@ public class DatabaseService {
     public AccountEntity insertAccount(Account account, String userName) {
         AccountEntity accountEntity = new AccountEntity(account.getAccountNumber(), userName, account.getBalance());
         return saveAccount(accountEntity);
+    }
+
+    public List<AccountEntity> getAllAccounts() {
+        return accountRepository.findAll();
     }
 }
