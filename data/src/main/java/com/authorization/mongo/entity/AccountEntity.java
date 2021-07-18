@@ -1,14 +1,14 @@
 package com.authorization.mongo.entity;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(value = "account")
-@Value
-@Builder
+@Data
+@AllArgsConstructor
 public class AccountEntity {
     @Id
     String id;
@@ -19,4 +19,10 @@ public class AccountEntity {
     String accountHolderName;
 
     Double balance;
+
+    public AccountEntity(String accountNumber, String accountHolderName, Double balance) {
+        this.accountNumber = accountNumber;
+        this.accountHolderName = accountHolderName;
+        this.balance = balance;
+    }
 }

@@ -4,14 +4,12 @@ package com.authorization.service;
 import com.authorization.account.Account;
 import com.authorization.authorizations.Authorization;
 import com.authorization.authorizations.PowerOfAttorney;
-import com.authorization.exception.UnauthorizedException;
 import com.authorization.mongo.entity.AccountEntity;
 import com.authorization.mongo.entity.GranteeAccount;
 import com.authorization.mongo.entity.UserEntity;
-import com.authorization.repository.AccountRepository;
-import com.authorization.repository.UserRepository;
 import com.authorization.security.SecurityUtility;
 import com.authorization.user.User;
+import com.authorization.util.ValidatorUtil;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 
@@ -25,23 +23,17 @@ import java.util.stream.Collectors;
 @Service
 public class AuthorizationService {
 
-    private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
     private final SecurityUtility securityUtility;
+    private final DatabaseService databaseService;
 
-    public AuthorizationService(AccountRepository userRepository, UserRepository userRepository1, SecurityUtility securityUtility) {
-        this.accountRepository = userRepository;
-        this.userRepository = userRepository1;
+    public AuthorizationService(SecurityUtility securityUtility, DatabaseService databaseService) {
         this.securityUtility = securityUtility;
-    }
-
-    public UserEntity getUserFromDb(String username) {
-        return userRepository.findByName(username).orElseThrow(NoSuchElementException::new);
+        this.databaseService = databaseService;
     }
 
     public List<AccountEntity> getAllAccounts() {
-        String userName = securityUtility.getUserName();
-        UserEntity userEntity = userRepository.findByName(userName).orElseThrow(() ->
+        String username = securityUtility.getUserName();
+        UserEntity userEntity = databaseService.getUserByUsername(username).orElseThrow(() ->
                 new NoSuchElementException("logged in user doesn't have any accounts"));
         List<GranteeAccount> granteeAccountIds = userEntity.getGranteeAccountIds();
 
@@ -49,20 +41,16 @@ public class AuthorizationService {
             return Collections.emptyList();
         }
         return getAllGranteeAccounts(granteeAccountIds);
-
-
     }
 
     public Optional<User> addPowerOfAttorney(PowerOfAttorney powerOfAttorney) {
         Account accountFromRequest = powerOfAttorney.getAccount();
-        validateAccountOwner(powerOfAttorney, accountFromRequest);
+        ValidatorUtil.validateAccountOwner(powerOfAttorney, accountFromRequest);
 
-        AccountEntity accountEntity = accountRepository.findByAccountNumber(accountFromRequest.getAccountNumber())
-                .orElseThrow(() -> new NoSuchElementException("account not found"));
+        AccountEntity accountEntity = databaseService.getAccountByAccountNumber(accountFromRequest.getAccountNumber());
+        Optional<UserEntity> granteeUser = databaseService.getUserByUsername(powerOfAttorney.getGranteeName());
 
-        Optional<UserEntity> granteeUser = userRepository.findByName(powerOfAttorney.getGranteeName());
-
-        if (granteeUser.isEmpty()) {
+        if (granteeUser.isEmpty()) { //grantee does not have an account -> we create one
             return Optional.of(createAndInsertUser(powerOfAttorney, accountEntity));
         } else {
             UserEntity user = granteeUser.get();
@@ -72,8 +60,8 @@ public class AuthorizationService {
 
             if (existingAccount.isPresent()) {
                 GranteeAccount granteeAccount = existingAccount.get();
-                addRightToExisting(powerOfAttorney, granteeAccount);
-                userRepository.save(user);
+                addRightToExistingGrantee(powerOfAttorney.getAuthorization(), granteeAccount);
+                databaseService.saveUser(user);
             } else {
                 GranteeAccount granteeAccount = createGranteeAccount(powerOfAttorney, accountEntity);
                 granteeAccounts.add(granteeAccount);
@@ -82,23 +70,18 @@ public class AuthorizationService {
         }
     }
 
-    private void addRightToExisting(PowerOfAttorney powerOfAttorney, GranteeAccount granteeAccount) {
-        if (powerOfAttorney.getAuthorization() == Authorization.READ) {
+    private void addRightToExistingGrantee(Authorization authorization, GranteeAccount granteeAccount) {
+        if (authorization == Authorization.READ) {
             granteeAccount.setCanRead(true);
-        } else if (powerOfAttorney.getAuthorization() == Authorization.WRITE) {
+        } else if (authorization == Authorization.WRITE) {
             granteeAccount.setCanWrite(true);
         }
     }
 
-    private void validateAccountOwner(PowerOfAttorney powerOfAttorney, Account accountFromRequest) {
-        if (!accountFromRequest.getAccountHolderName().equals(powerOfAttorney.getGrantorName())) {
-            throw new UnauthorizedException("Account owner names do not match");
-        }
-    }
 
     private User createAndInsertUser(PowerOfAttorney powerOfAttorney, AccountEntity accountEntity) {
         GranteeAccount granteeAccount = createGranteeAccount(powerOfAttorney, accountEntity);
-        var randomPin = String.format("%04d", new Random().nextInt(10000));
+        String randomPin = String.format("%04d", new Random().nextInt(10000));
 
         UserEntity userEntity = UserEntity.builder()
                 .name(powerOfAttorney.getGranteeName())
@@ -106,7 +89,7 @@ public class AuthorizationService {
                 .granteeAccountIds(Collections.singletonList(granteeAccount))
                 .build();
 
-        userRepository.save(userEntity);
+        databaseService.saveUser(userEntity);
         return new User(powerOfAttorney.getGranteeName(), randomPin);
     }
 
@@ -114,32 +97,18 @@ public class AuthorizationService {
     private GranteeAccount createGranteeAccount(PowerOfAttorney powerOfAttorney, AccountEntity accountEntity) {
         GranteeAccount granteeAccount = new GranteeAccount();
         granteeAccount.setAccountId(accountEntity.getId());
-        addRightToExisting(powerOfAttorney, granteeAccount);
+        addRightToExistingGrantee(powerOfAttorney.getAuthorization(), granteeAccount);
         return granteeAccount;
     }
 
     private List<AccountEntity> getAllGranteeAccounts(List<GranteeAccount> granteeAccountIds) {
         List<String> accountIds = granteeAccountIds.stream().map(GranteeAccount::getAccountId).collect(Collectors.toList());
-        return Streamable.of(accountRepository.findAllById(accountIds)).stream().collect(Collectors.toList());
+        return Streamable.of(databaseService.getAllAccountsById(accountIds)).stream().collect(Collectors.toList());
     }
 
     public AccountEntity insertAccount(Account account) {
-        String userName = securityUtility.getUserName();
-        if (!userName.equals(account.getAccountHolderName())) {
-            throw new UnauthorizedException("Account owner names do not match");
-        }
-        AccountEntity accountEntity = AccountEntity.builder()
-                .accountNumber(account.getAccountNumber())
-                .accountHolderName(userName)
-                .balance(account.getBalance()).build();
-        return accountRepository.save(accountEntity);
-    }
-
-    public UserEntity insertUser(User user) {
-        UserEntity userEntity = UserEntity.builder()
-                .name(user.getUserName())
-                .pin(String.format("%04d", new Random().nextInt(10000)))
-                .build();
-        return userRepository.save(userEntity);
+        String username = securityUtility.getUserName();
+        ValidatorUtil.validateUsernameFromToken(username, account);
+        return databaseService.insertAccount(account, username);
     }
 }

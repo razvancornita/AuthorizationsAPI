@@ -3,6 +3,7 @@ package com.authorization.controller;
 import com.authorization.authorizations.PowerOfAttorney;
 import com.authorization.mongo.entity.UserEntity;
 import com.authorization.service.AuthorizationService;
+import com.authorization.service.DatabaseService;
 import com.authorization.user.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,11 @@ import java.util.Optional;
 public class UnauthorizedController {
 
     private final AuthorizationService authorizationService;
+    private final DatabaseService databaseService;
 
-    public UnauthorizedController(AuthorizationService authorizationService) {
+    public UnauthorizedController(AuthorizationService authorizationService, DatabaseService databaseService) {
         this.authorizationService = authorizationService;
+        this.databaseService = databaseService;
     }
 
     @PostMapping("/addPowerOfAttorney")
@@ -35,6 +38,6 @@ public class UnauthorizedController {
 
     @PostMapping("/createUser")
     public ResponseEntity<UserEntity> createUser(@RequestBody User user) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authorizationService.insertUser(user));
+        return ResponseEntity.status(HttpStatus.CREATED).body(databaseService.insertUser(user));
     }
 }
