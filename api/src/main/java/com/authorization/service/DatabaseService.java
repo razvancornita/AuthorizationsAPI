@@ -85,4 +85,16 @@ public class DatabaseService {
         loginRepository.save(loginEntity);
 
     }
+
+    public void invalidateLogin(String username) {
+        Optional<LoginEntity> previousLogin = loginRepository.findByName(username);
+        LoginEntity loginEntity;
+        if (previousLogin.isEmpty()) {
+            throw new NoSuchElementException("login not found");
+        } else {
+            loginEntity = previousLogin.get();
+            loginEntity.setLoggedIn(false);
+        }
+        loginRepository.save(loginEntity);
+    }
 }

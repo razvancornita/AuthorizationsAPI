@@ -1,9 +1,11 @@
 package com.authorization.controller;
 
 import com.authorization.security.JwtTokenProvider;
+import com.authorization.security.SecurityUtility;
 import com.authorization.service.DatabaseService;
 import com.authorization.user.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,12 +23,15 @@ public class SecurityController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final DatabaseService databaseService;
+    private final SecurityUtility securityUtility;
 
 
-    public SecurityController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider, DatabaseService databaseService) {
+    public SecurityController(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider,
+                              DatabaseService databaseService, SecurityUtility securityUtility) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.databaseService = databaseService;
+        this.securityUtility = securityUtility;
     }
 
 
@@ -39,8 +44,10 @@ public class SecurityController {
         return ResponseEntity.ok("{ \"Bearer\" : \"" + tokenProvider.generateToken(authentication) + "\"}");
     }
 
-    @DeleteMapping("/logout")
+    @DeleteMapping("/authorization/logout")
     public ResponseEntity<String> logout() {
-        return null;
+        String userName = securityUtility.getUserName();
+        databaseService.invalidateLogin(userName);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("User logged out");
     }
 }

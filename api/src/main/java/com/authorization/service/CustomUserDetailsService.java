@@ -1,5 +1,8 @@
 package com.authorization.service;
 
+import com.authorization.exception.UnauthorizedException;
+import com.authorization.mongo.entity.LoginEntity;
+import com.authorization.repository.LoginRepository;
 import com.authorization.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -10,12 +13,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private LoginRepository loginRepository;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -26,5 +33,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         return User.withUsername(userEntity.getName())
                 .password(passwordEncoder.encode(String.valueOf(userEntity.getPin())))
                 .authorities("user").build();
+    }
+
+    public void checkIfLoginIsValid(String username) {
+        Optional<LoginEntity> login = loginRepository.findByName(username);
+        if (login.isPresent() && !login.get().getLoggedIn()) {
+            throw new UnauthorizedException("user previously logged out");
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.authorization.security;
 
 import com.authorization.exception.AuthorizationHeaderMissingException;
+import com.authorization.exception.UnauthorizedException;
 import com.authorization.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,19 +41,19 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
         try {
             securityUtility.checkIfTokenIsExpired();
-            String userName = securityUtility.getUserName();
+            String username = securityUtility.getUserName();
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            userDetailsService.checkIfLoginIsValid(username);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (AuthorizationHeaderMissingException e) {
-
-        } catch (NoSuchElementException e) {
-
+        } catch (AuthorizationHeaderMissingException | NoSuchElementException | UnauthorizedException e) {
+            log.error("an error occured during authentication", e);
         }
 
         chain.doFilter(request, response);
