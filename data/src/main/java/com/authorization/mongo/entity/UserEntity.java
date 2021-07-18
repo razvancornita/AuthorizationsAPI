@@ -6,8 +6,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
-
 @Document(value = "user")
 @Value
 @Builder
@@ -19,6 +17,4 @@ public class UserEntity {
     String name;
 
     String pin;
-
-    List<GranteeAccount> granteeAccountIds;
 }
