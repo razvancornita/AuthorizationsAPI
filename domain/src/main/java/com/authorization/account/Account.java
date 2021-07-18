@@ -1,9 +1,10 @@
 package com.authorization.account;
 
-public interface Account {
-    String getAccountNumber();
+import lombok.Data;
 
-    String getAccountHolderName();
-
-    Double getBalance();
+@Data
+public class Account {
+    String accountNumber;
+    String accountHolderName;
+    Double balance;
 }
