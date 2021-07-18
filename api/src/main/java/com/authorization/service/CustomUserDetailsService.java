@@ -1,6 +1,5 @@
 package com.authorization.service;
 
-import com.authorization.mongo.entity.UserEntity;
 import com.authorization.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -23,13 +22,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var userEntity = getUserFromDb(username);
+        var userEntity = userRepository.findByName(username).orElseThrow(NoSuchElementException::new);
         return User.withUsername(userEntity.getName())
                 .password(passwordEncoder.encode(String.valueOf(userEntity.getPin())))
                 .authorities("user").build();
-    }
-
-    public UserEntity getUserFromDb(String username) {
-        return userRepository.findByName(username).orElseThrow(NoSuchElementException::new);
     }
 }
