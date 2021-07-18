@@ -25,8 +25,8 @@ public class AuthorizedController {
     }
 
     @GetMapping("/getAllAccounts")
-    public List<AccountEntity> getAllAccounts() {
-        return authorizationService.getAllAccounts();
+    public ResponseEntity<List<AccountEntity>> getAllAccounts() {
+        return ResponseEntity.ok(authorizationService.getAllAccounts());
     }
 
     @PostMapping("/createAccount")
