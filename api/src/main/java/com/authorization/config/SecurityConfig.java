@@ -4,7 +4,6 @@ import com.authorization.security.JwtTokenFilter;
 import com.authorization.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -66,16 +65,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         // Set permissions on endpoints
         http.authorizeRequests()
+
                 //private endpoints
-                .antMatchers(HttpMethod.GET, basePath)
+                .antMatchers(basePath)
                 .authenticated()
-                .antMatchers(HttpMethod.POST, basePath)
-                .authenticated()
-                .antMatchers(HttpMethod.DELETE, basePath)
-                .authenticated()
+
                 //public endpoints
                 .anyRequest()
                 .permitAll();
+
 
         // Add JWT token filter
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
