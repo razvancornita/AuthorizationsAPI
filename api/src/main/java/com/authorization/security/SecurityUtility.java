@@ -1,5 +1,6 @@
 package com.authorization.security;
 
+import com.authorization.config.JwtAuthenticationConfig;
 import com.authorization.exception.AuthorizationHeaderMissingException;
 import com.authorization.exception.ExpiredJwtTokenException;
 import com.authorization.exception.InvalidJwtTokenException;
