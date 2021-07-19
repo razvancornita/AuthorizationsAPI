@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "a49c5d18-d9b6-45d5-97dc-5dc21274ab5b",
+		"name": "Random",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "login",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userName\": \"andrei\",\n    \"pin\": 7460\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/login",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "logout",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/authorization/logout",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"authorization",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllAccounts",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJyYXp2YW4iLCJpYXQiOjE2MjY1NDU5MTQsImV4cCI6MTYyNjYzMjMxNH0.PCYmtiJMsPKe7eL7LzfdntSZo2V0BThad5TnDvwS0mfnNgy23IMvhci1vZKDGKzQv89gJWaTfH2n6dhIDE7pgA",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userName\": \"razvan\",\n    \"pin\": 1234\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/authorization/getAllAccounts",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"authorization",
+						"getAllAccounts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "addPowerOfAttorney",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"granteeName\": \"mihai\",\n    \"grantorName\": \"razvan\",\n    \"account\": {\n        \"accountNumber\": \"12345\",\n        \"accountHolderName\": \"razvan\",\n        \"balance\": 50.4\n    }, \n    \"authorization\": \"READ\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/addPowerOfAttorney",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"addPowerOfAttorney"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createAccount",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"accountNumber\": \"7777\",\n    \"accountHolderName\": \"razvan\",\n    \"balance\": 200.4\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/authorization/createAccount",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"authorization",
+						"createAccount"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createUser",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userName\": \"theodor\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/createUser",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"createUser"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
