@@ -16,6 +16,8 @@ model that contains a Read or Write authorization for a Payment or Savings accou
 
 ## The task at hand
 
+The code is ready to go to production on delivery - no Unit/Integration tests because of the time limit
+
 The following business requirements have been implemented:
 
 - Users must be able to create write or read access for payments and savings accounts
@@ -41,8 +43,6 @@ The application was secured using Spring Security & stateteless JWT authenticati
   and then an account is created
 - '/authorized/logout' - the Login entity is updated within the database to be invalid
 - '/authorized/getAllAccounts' - we retrieve all the accounts, and then we search within all granteeUsers
-
-- The code is ready to go to production on delivery - no Unit/Integration tests because of the time limit
 
 ## Background information
 
