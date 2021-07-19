@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GranteeUser {
+public class GranteeUserEntity {
     private String granteeName;
     private boolean canWrite;
     private boolean canRead;

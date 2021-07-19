@@ -24,7 +24,7 @@ public class AccountEntity {
 
     Double balance;
 
-    List<GranteeUser> granteeUsers;
+    List<GranteeUserEntity> granteeUsers;
 
     public AccountEntity(String accountNumber, String accountHolderName, Double balance) {
         this.accountNumber = accountNumber;

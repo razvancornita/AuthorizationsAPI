@@ -1,4 +1,4 @@
-package com.authorization.mongo;
+package com.authorization.mongo.config;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;

@@ -1,6 +1,6 @@
 package com.authorization.controller;
 
-import com.authorization.ErrorDetails;
+import com.authorization.error.ErrorDetails;
 import com.authorization.exception.UnauthorizedException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

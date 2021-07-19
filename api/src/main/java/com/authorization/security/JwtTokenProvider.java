@@ -1,6 +1,6 @@
 package com.authorization.security;
 
-import com.authorization.config.JwtAuthenticationConfig;
+import com.authorization.config.SecurityConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -18,22 +18,18 @@ public class JwtTokenProvider implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Autowired
-    JwtAuthenticationConfig jwtConfig;
+    SecurityConfig securityConfig;
 
     public String generateToken(Authentication authentication) {
-
         User user = (User) authentication.getPrincipal();
-
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtConfig.getExpiration());
-
+        Date expiryDate = new Date(new Date().getTime() + securityConfig.getExpiration());
         Claims claims = Jwts.claims().setSubject(user.getUsername());
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, jwtConfig.getSecret())
+                .signWith(SignatureAlgorithm.HS512, securityConfig.getSecret())
                 .compact();
     }
 }

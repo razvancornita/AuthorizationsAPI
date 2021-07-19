@@ -1,6 +1,6 @@
 package com.authorization.security;
 
-import com.authorization.config.JwtAuthenticationConfig;
+import com.authorization.config.SecurityConfig;
 import com.authorization.exception.AuthorizationHeaderMissingException;
 import com.authorization.exception.ExpiredJwtTokenException;
 import com.authorization.exception.InvalidJwtTokenException;
@@ -26,10 +26,10 @@ import java.util.Map;
 @Component
 public class SecurityUtility {
 
-    private final JwtAuthenticationConfig jwtAuthenticationConfig;
+    private final SecurityConfig securityConfig;
 
-    public SecurityUtility(JwtAuthenticationConfig jwtAuthenticationConfig) {
-        this.jwtAuthenticationConfig = jwtAuthenticationConfig;
+    public SecurityUtility(SecurityConfig securityConfig) {
+        this.securityConfig = securityConfig;
     }
 
     private HttpServletRequest getRequestFromContext() {
@@ -53,7 +53,7 @@ public class SecurityUtility {
         String token = getTokenFromHeader(request);
         try {
             var signedJwt = SignedJWT.parse(token);
-            if (signedJwt.verify(new MACVerifier(jwtAuthenticationConfig.getSecret()))) {
+            if (signedJwt.verify(new MACVerifier(securityConfig.getSecret()))) {
                 throw new InvalidJwtTokenException("token was not signed with correct secret");
             }
             return signedJwt.getPayload().toJSONObject();

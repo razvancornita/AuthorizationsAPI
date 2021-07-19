@@ -2,6 +2,8 @@ package com.authorization.config;
 
 import com.authorization.security.JwtTokenFilter;
 import com.authorization.service.CustomUserDetailsService;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +21,14 @@ import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
+@Getter
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Value("${application.security.jwt.expiration}")
+    private int expiration;
+
+    @Value("${application.security.jwt.secret}")
+    private String secret;
 
     private final JwtTokenFilter jwtTokenFilter;
     private final CustomUserDetailsService userDetailsService;
@@ -61,19 +70,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 (request, response, ex) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage()))
                 .and();
 
-        var basePath = "/authorization/**";
-
         // Set permissions on endpoints
         http.authorizeRequests()
-
                 //private endpoints
-                .antMatchers(basePath)
+                .antMatchers("/authorization/**")
                 .authenticated()
-
                 //public endpoints
                 .anyRequest()
                 .permitAll();
-
 
         // Add JWT token filter
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);

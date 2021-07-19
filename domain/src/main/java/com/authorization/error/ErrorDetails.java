@@ -1,4 +1,4 @@
-package com.authorization;
+package com.authorization.error;
 
 import lombok.Data;
 

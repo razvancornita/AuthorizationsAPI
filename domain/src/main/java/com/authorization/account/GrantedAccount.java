@@ -1,6 +1,5 @@
-package com.authorization;
+package com.authorization.account;
 
-import com.authorization.account.Account;
 import com.authorization.authorizations.Authorization;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
